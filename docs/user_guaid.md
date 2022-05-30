@@ -15,14 +15,7 @@ AutoDG oracle dataguard 自动搭建使用手册
     6. 表索引定义转换
     7. 表非空约束、外键约束、检查约束、主键约束、唯一约束转换，主键、唯一、检查、外键等约束 ORACLE ENABLED 状态才会被创建，其他状态忽略创建
     8. 注意事项
-       1. 分区表统一视为普通表转换，对象输出到 compatibility_${sourcedb}.sql 文件并提供 WARN 日志关键字筛选打印，若有要求，建议 reverse 手工转换
-       2. 临时表统一视为普通表转换，对象输出到 compatibility_${sourcedb}.sql 文件并提供 WARN 日志关键字筛选打印
-       3. 蔟表统一视为普通表转换，对象输出到 compatibility_${sourcedb}.sql 文件并提供 WARN 日志关键字筛选打印
-       4. ORACLE 唯一约束基于唯一索引的字段，下游只会创建唯一索引
-       5. ORACLE 字段函数默认值保持上游值，若是下游不支持的默认值，则当手工执行表创建脚本报错
-       6. ORACLE FUNCTION-BASED NORMAL、BITMAP 不兼容性索引对象输出到 compatibility_${sourcedb}.sql 文件，并提供 WARN 日志关键字筛选打印
-       7. 表结构以及 Schema 定义转换忽略 Oracle 字符集统一以 utf8mb4 转换，但排序规则会根据 Oracle 排序规则予以规则转换
-       8. 程序 reverse 阶段若遇到报错则进程不终止，日志最后会输出警告信息，具体错误表以及对应错误详情见 {元数据库} 内表 [table_error_detail] 数据
+       1. 
 
 2. 表结构对比【以 ORACLE 为基准】
    1. 表结构对比以 ORACLE 为基准对比
@@ -83,66 +76,14 @@ $ ./transferdb --config config.toml --mode csv
 ```
 #### ALL 模式同步
 ```sql
-/*同步用户*/
-/*创建表空间*/
-create tablespace LOGMINER_TBS
-datafile 
-size 50M autoextend on next 5M maxsize unlimited; 
-
-/*创建临时表空间*/
-create temporary tablespace LOGMINER_TMP_TBL  
-tempfile 
-size 50m autoextend on next 50m maxsize 20480m;  
-
-/*创建用户*/
-CREATE USER logminer IDENTIFIED BY logminer 
-DEFAULT tablespace LOGMINER_TBS
-temporary tablespace LOGMINER_TMP_TBL;
-
-/*用户角色*/
-create role logminer_privs;
-
-/*角色授权*/
-grant create session,
-EXECUTE_CATALOG_ROLE,
-select any transaction,
-select any table,
-select any dictionary to logminer_privs;
-grant select on SYSTEM.LOGMNR_COL$ to logminer_privs;
-grant select on SYSTEM.LOGMNR_OBJ$ to logminer_privs;
-grant select on SYSTEM.LOGMNR_USER$ to logminer_privs;
-grant select on SYSTEM.LOGMNR_UID$ to logminer_privs;
-grant select on V_$DATABASE to logminer_privs;
-grant select_catalog_role to logminer_privs;
-grant RESOURCE,CONNECT TO logminer_privs;
-grant EXECUTE ON DBMS_LOGMNR TO logminer_privs;
-grant select on v_$logmnr_contents to logminer_privs;
-
--- 仅当Oracle为12c版本时，才需要添加，否则删除此行内容
-grant LOGMINING to logminer_privs;
-
-/*用户授权*/
-grant logminer_privs to logminer;
-alter user logminer quota unlimited on users;
-
-
 
 /* 数据库开启归档以及补充日志 */
 -- 开启归档【必须选项】
 alter database archivelog;
--- 最小附加日志【必须选项】
-ALTER DATABASE ADD supplemental LOG DATA ;
+-- 强制日志【必须选项】
+ALTER DATABASE force log ;
 
--- 表级别或者库级别选其一，一般只针对同步表开启即可【必须选项】，未开启会导致同步存在问题
---增加表级别附加日志
-ALTER TABLE marvin.marvin4 ADD supplemental LOG DATA (all) COLUMNS;
-ALTER TABLE marvin.marvin7 ADD supplemental LOG DATA (all) COLUMNS;
-ALTER TABLE marvin.marvin8 ADD supplemental LOG DATA (all) COLUMNS;
 
---清理表级别附加日志
-ALTER TABLE marvin.marvin4 DROP supplemental LOG DATA (all) COLUMNS;
-ALTER TABLE marvin.marvin7 DROP supplemental LOG DATA (all) COLUMNS;
-ALTER TABLE marvin.marvin8 DROP supplemental LOG DATA (all) COLUMNS;
 
 --增加或删除库级别附加日志【库级别、表级别二选一】
 ALTER DATABASE ADD supplemental LOG DATA (all) COLUMNS;
@@ -150,23 +91,13 @@ ALTER DATABASE DROP supplemental LOG DATA (all) COLUMNS;
 
 /* 查看附加日志 */
 -- 数据库级别附加日志查看
-SELECT supplemental_log_data_min min,
-supplemental_log_data_pk pk,
-supplemental_log_data_ui ui,
-supplemental_log_data_fk fk,
-supplemental_log_data_all allc
-FROM v$database;
 
--- 表级别附加日志查看
-select * from dba_log_groups where upper(owner) = upper('marvin');
 
--- 查看不同用户的连接数
-select username,count(username) from v$session where username is not null group by username;
 ```
 
 若直接在命令行中用 `nohup` 启动程序，可能会因为 SIGHUP 信号而退出，建议把 `nohup` 放到脚本里面且不建议用 kill -9，如：
 
 ```shell
 #!/bin/bash
-nohup ./transferdb -config config.toml --mode all > nohup.out &
+nohup ./AutoDG -config config.toml --mode check > nohup.out &
 ```
