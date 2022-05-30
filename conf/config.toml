@@ -1,0 +1,54 @@
+
+[source]
+# 源端主库 oracle 连接串
+username = "system"
+password = "oracle"
+host = "192.168.1.8"
+port = 1521
+service-name = "crm"
+# 配置 oracle 连接参数,不需要更改
+connect-params = "poolMinSessions=10&poolMaxSessions=1000&poolWaitTimeout=60s&poolSessionMaxLifetime=1h&poolSessionTimeout=5m&poolIncrement=10&timezone=Local"
+# 配置 oracle 连接会话 session 变量,不需要更改
+session-params = ["select * from dual"]
+
+# 主库的oracle ORACLE_HOME，目录最后不要添加“/”，类似/db/
+primary-oracle-home = "/oracle/app/oracle/product/11.2.0/db"
+# 主库的grid ORACLE_HOME for RAC 目录最后不要添加“/”，类似/db/
+primary-grid-home = "/oracle/app/oracle/product/11.2.0/db"
+# 主库 oracle 软件owner
+primary-oracle-home-owner = "oracle"
+# 主库 grid 软件owner，非RAC 环境可以为空
+primary-grid-home-owner = "grid"
+
+# 备库的 oracle ORACLE_BASE 目录最后不要添加“/”，类似/db/
+standby-oracle-base = "."
+# 备库的 oracle ORACLE_HOME 目录最后不要添加“/”，类似/db/
+standby-oracle-home = "."
+# 备库的 grid ORACLE_HOME (for RAC)
+standby-grid-home = "."
+# 备库的 oracle 软件owner
+standby-oracle-home-owner = "oracle"
+# 备库的 grid 软件owner，非RAC 环境可以为空
+standby-grid-home-owner = "grid"
+
+# 主库数据文件目录
+primary-data-dg = "+NGPDATA01"
+# 备库数据文件目录
+standby-data-dg = "+NGPDATA01"
+# 主库操作系统root 密码
+rootpwd = "root1234"
+# 备库所有节点IP，用于同步各个节点tnsnames.ora ,orapwd 文件，第一个IP 默认为归档日志应用节点
+standby-host-ips = ["192.168.1.2","192.179.1.3"]
+
+
+[log]
+# 日志 level
+log-level = "debug"
+# 日志文件路径
+log-file = "./conf/autoDG.log"
+# 每个日志文件保存的最大尺寸 单位：M
+max-size = 128
+# 文件最多保存多少天
+max-days = 7
+# 日志文件最多保存多少个备份
+max-backups = 30
