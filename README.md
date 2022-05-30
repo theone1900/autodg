@@ -1,5 +1,4 @@
-# autodg
-AutoDG oracle dataguard 自动搭建使用手册
+# AutoDG oracle dataguard 自动搭建使用手册
 -------
 #### 使用说明
 1. check 参数 主库环境检查
