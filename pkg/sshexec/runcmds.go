@@ -71,8 +71,8 @@ std1900 =
 		(CONNECT_DATA =
 			(SERVICE_NAME = %s)
 ))`, sshconfig.Host, sshconfig.ServiceName, sshconfig.StandbyHostIps[0], sshconfig.ServiceName)
-		cmds := fmt.Sprintf(`echo "%s" >> %s/network/admin/tnsnames.ora`, tnsnames, sshconfig.PrimaryGridHome)
-		fmt.Printf("[UpdatePriTns cmds:]", cmds)
+		var cmds = fmt.Sprintf(`echo "%s" >> %s/network/admin/tnsnames.ora`, tnsnames, sshconfig.PrimaryGridHome)
+		fmt.Println("[UpdatePriTns cmds:]", cmds)
 
 		res, err := service.RunSsh(cmds, sshconfig)
 		if err != nil {

@@ -117,24 +117,24 @@ func Run(cfg *service.CfgFile, mode string) error {
 		sshexec.DownloadPriOrapw(cfg.SourceConfig, sid)
 
 		// 更新主库tnsnames 文件
-		service.Logger.Info("prepare DG", zap.String("Update Primary DB tnsnames.ora file ", ""))
+		service.Logger.Info("prepare DG", zap.String("Update Primary DB tnsnames.ora file ", cfg.SourceConfig.PrimaryOracleHome+"/network/admin/tnsnames.ora"))
 		sshexec.UpdatePriTns(cfg.SourceConfig)
 
 		// 下载主库tnsnames.ora 文件
-		service.Logger.Info("prepare DG", zap.String("Download Primary DB tnsnames.ora file ", ""))
+		service.Logger.Info("prepare DG", zap.String("Download Primary DB tnsnames.ora file ", cfg.SourceConfig.PrimaryOracleHome+"/network/admin/tnsnames.ora"))
 		sshexec.DownloadPriTns(cfg.SourceConfig)
 
 		// 拷贝tnsnames，orapw 到备库
-		service.Logger.Info("prepare DG", zap.String("Init standby DB tnsnames.ora file ", cfg.SourceConfig.PrimaryOracleHome+"/network/admin/tnsnames.ora"))
+		service.Logger.Info("prepare DG", zap.String("Init standby DB tnsnames.ora file ", cfg.SourceConfig.StandbyOracleHome+"/network/admin/tnsnames.ora"))
 		localexec.Copytns(cfg.SourceConfig)
-		service.Logger.Info("prepare DG", zap.String("Init standby DB orapw file ", cfg.SourceConfig.StandbyOracleHome+"/dbs/"+"orapw"+sid))
+		service.Logger.Info("prepare DG", zap.String("Init standby DB orapw file ", cfg.SourceConfig.StandbyOracleHome+"/dbs/"+"orapw"+cfg.SourceConfig.OracleSid))
 		localexec.CopyOrapw(cfg.SourceConfig, sid)
 
 		// 初始化备库listener（single:oracle  RAC:GRID）
 		// single: oracle user oracle_home
 		// RAC   : grid   user oracle_home
 		service.Logger.Info("prepare DG", zap.String("Init standby DB listener.ora file ", cfg.SourceConfig.StandbyGridHome+"/network/admin/tnsnames.ora"))
-		localexec.InitStdListener(cfg.SourceConfig, dbname, sid)
+		localexec.InitStdListener(cfg.SourceConfig)
 
 		// 启动备库监听 lnsrctl start listener
 		// single： oracle
@@ -142,12 +142,15 @@ func Run(cfg *service.CfgFile, mode string) error {
 		service.Logger.Info("prepare DG", zap.String("Startup standby DB listener ", "Listener starting........."))
 		localexec.StartListener(cfg.SourceConfig)
 
+		// 展现listener status
+		// todo: ShowListenerStatus()
+
 		// 初始化standby instance pfile
 		service.Logger.Info("prepare DG", zap.String("Init standby DB pfile ", "pfile initing........."))
 		localexec.InitStdInstancePfile(cfg.SourceConfig)
 
 		// 启动备库实例到nomount
-		service.Logger.Info("prepare DG", zap.String("Startup standby Instance ", cfg.SourceConfig.StandbyOracleHome+"/dbs/pfile"+cfg.SourceConfig.OracleSid))
+		service.Logger.Info("prepare DG", zap.String("Startup standby Instance(nomount) ", cfg.SourceConfig.StandbyOracleHome+"/dbs/pfile"+cfg.SourceConfig.OracleSid))
 		localexec.StartStdInstance(cfg.SourceConfig)
 
 		// tnsping (主库，备库)连接校验
