@@ -4,15 +4,26 @@ import (
 	"autodg/service"
 	"database/sql"
 	"fmt"
+	"go.uber.org/zap"
+	"time"
 )
 
 // GetOracleDBSid 获取oracle_sid
 func GetOracleDBSid(oracledb *sql.DB) (string, error) {
+	startTime := time.Now()
+	service.Logger.Info("get oracle oracle_sid start")
+
 	querySQL := fmt.Sprintf(`select value from v$parameter where NAME='instance_name'`)
 	_, res, err := service.Query(oracledb, querySQL)
 	if err != nil {
 		return res[0]["VALUE"], err
 	}
+
+	endTime := time.Now()
+	service.Logger.Info("get oracle oracle_sid finished",
+		zap.String("CMDS", querySQL),
+		zap.String("cost", endTime.Sub(startTime).String()))
+
 	return res[0]["VALUE"], nil
 }
 
@@ -35,7 +46,6 @@ func GetOracleUniquename(oracledb *sql.DB) (string, error) {
 	}
 	return res[0]["VALUE"], nil
 }
-
 
 func GetOracleArcMode(oracledb *sql.DB) (string, error) {
 
@@ -86,6 +96,3 @@ func CheckOracleSpfile(oracledb *sql.DB) (string, error) {
 	}
 	return res[0]["VALUE"], nil
 }
-
-
-

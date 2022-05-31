@@ -12,14 +12,18 @@ import (
 	"os"
 )
 
-
-
 /*
 	sshserver
 */
 // 更新主库tnsnames
+// single: oraclehome
+// RAC   : gridhome
 func UpdatePriTns(sshconfig service.SourceConfig) (string, error) {
-	tnsnames := fmt.Sprintf(`
+	var res string
+	var err error
+	if sshconfig.IsRAC == "FALSE" {
+		//service.Logger.Info("prepare DG", zap.String("Get Primary DB (Sinage & RAC)","##This is a Single node DataBase"))
+		tnsnames := fmt.Sprintf(`
 pri1900 =
 		(DESCRIPTION =
 			(ADDRESS_LIST =
@@ -36,16 +40,47 @@ std1900 =
 		)
 		(CONNECT_DATA =
 			(SERVICE_NAME = %s)
-))`, sshconfig.Host, sshconfig.ServiceName,sshconfig.StandbyHostIps[0],sshconfig.ServiceName)
-	cmds := fmt.Sprintf(`echo "%s" >> %s/network/admin/tnsnames.ora`, tnsnames, sshconfig.PrimaryOracleHome)
+))`, sshconfig.Host, sshconfig.ServiceName, sshconfig.StandbyHostIps[0], sshconfig.ServiceName)
+		cmds := fmt.Sprintf(`echo "%s" >> %s/network/admin/tnsnames.ora`, tnsnames, sshconfig.PrimaryOracleHome)
+		fmt.Printf("[UpdatePriTns cmds:]", cmds)
 
-	fmt.Printf("[cmds:]",cmds)
+		res, err := service.RunSsh(cmds, sshconfig)
+		if err != nil {
+			return res, err
+		}
+		return res, err
 
-	res, err := service.RunSsh(cmds, sshconfig)
-	if err != nil {
+	} else {
+		//fmt.Println("[oracle cluster_database] : ",israc," ##This is a RAC Cluster DataBase")
+		//service.Logger.Info("prepare DG", zap.String("Get Primary DB (Sinage & RAC)","##This is a RAC Cluster DataBase"))
+		tnsnames := fmt.Sprintf(`
+pri1900 =
+		(DESCRIPTION =
+			(ADDRESS_LIST =
+			(ADDRESS = (PROTOCOL = TCP)(HOST = %s)(PORT = 1521))
+		)
+		(CONNECT_DATA =
+			(SERVICE_NAME = %s)
+))
+
+std1900 =
+		(DESCRIPTION =
+			(ADDRESS_LIST =
+			(ADDRESS = (PROTOCOL = TCP)(HOST = %s)(PORT = 1521))
+		)
+		(CONNECT_DATA =
+			(SERVICE_NAME = %s)
+))`, sshconfig.Host, sshconfig.ServiceName, sshconfig.StandbyHostIps[0], sshconfig.ServiceName)
+		cmds := fmt.Sprintf(`echo "%s" >> %s/network/admin/tnsnames.ora`, tnsnames, sshconfig.PrimaryGridHome)
+		fmt.Printf("[UpdatePriTns cmds:]", cmds)
+
+		res, err := service.RunSsh(cmds, sshconfig)
+		if err != nil {
+			return res, err
+		}
 		return res, err
 	}
-	return res, nil
+	return res, err
 }
 
 // DownloadPriTns 下载主库tnsnames
@@ -72,7 +107,7 @@ func DownloadPriTns(sftpconfig service.SourceConfig) (string, error) {
 
 	//dial 获取ssh client
 	addr := fmt.Sprintf("%s:%d", sshHost, sshPort)
-	fmt.Println("[addr:]",addr)
+	fmt.Println("[addr:]", addr)
 	sshClient, err := ssh.Dial("tcp", addr, config)
 
 	//此时获取了sshClient，下面使用sshClient构建sftpClient
@@ -98,12 +133,12 @@ func DownloadPriTns(sftpconfig service.SourceConfig) (string, error) {
 }
 
 // CheckPriOrapwd 检查主库密码文件orapw 是否存在
-func CheckPriOrapwd(sshconfig service.SourceConfig,oracle_sid string) (string, error) {
+func CheckPriOrapwd(sshconfig service.SourceConfig, oracle_sid string) (string, error) {
 
 	var cmds = fmt.Sprintf(`ls -l %s/dbs/orapw%s |wc -l 2>/dev/null`, sshconfig.PrimaryOracleHome, oracle_sid)
 	fmt.Println("[check orapwd start]")
 	res, err := service.RunSsh(cmds, sshconfig)
-	fmt.Println("[check orapwd end]",)
+	fmt.Println("[check orapwd end]")
 	if err != nil {
 		return res, err
 	}
@@ -111,7 +146,7 @@ func CheckPriOrapwd(sshconfig service.SourceConfig,oracle_sid string) (string, e
 }
 
 // DownloadPriOrapw 下载主库orapw 密码文件
-func DownloadPriOrapw(sftpconfig service.SourceConfig,oracle_sid string) (string, error) {
+func DownloadPriOrapw(sftpconfig service.SourceConfig, oracle_sid string) (string, error) {
 
 	//var res string
 	var sftpClient *sftp.Client
@@ -134,16 +169,16 @@ func DownloadPriOrapw(sftpconfig service.SourceConfig,oracle_sid string) (string
 
 	//dial 获取ssh client
 	addr := fmt.Sprintf("%s:%d", sshHost, sshPort)
-	fmt.Println("[addr:]",addr)
+	fmt.Println("[addr:]", addr)
 	sshClient, err := ssh.Dial("tcp", addr, config)
 
 	//此时获取了sshClient，下面使用sshClient构建sftpClient
 	if sftpClient, err = sftp.NewClient(sshClient); err != nil {
 		log.Fatalln("error occurred:", err)
 	}
-	srcFile, err := sftpClient.Open(fmt.Sprintf(`%s/dbs/orapw%s`, sftpconfig.PrimaryOracleHome,oracle_sid)) //远程
-	fmt.Println(fmt.Sprintf(`%s/dbs/orapw%s`, sftpconfig.PrimaryOracleHome,oracle_sid))
-	dstPath := fmt.Sprintf(`orapw%s`,oracle_sid)
+	srcFile, err := sftpClient.Open(fmt.Sprintf(`%s/dbs/orapw%s`, sftpconfig.PrimaryOracleHome, oracle_sid)) //远程
+	fmt.Println(fmt.Sprintf(`%s/dbs/orapw%s`, sftpconfig.PrimaryOracleHome, oracle_sid))
+	dstPath := fmt.Sprintf(`orapw%s`, oracle_sid)
 	dstFile, err := os.Create(dstPath) //本地
 
 	//defer func() {
