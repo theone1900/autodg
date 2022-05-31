@@ -1,17 +1,21 @@
 # AutoDG oracle dataguard 自动搭建使用手册
 -------
-#### 使用说明
-1. check 参数 主库环境检查
-    1. 主要检查 数据库版本 是否大于11201，归档模式&force_loging 是否开启，密码文件orapwd$SID是否存在
-    2. 不兼容性对象
-    8. 注意事项
-       1. 
+#### 功能参数使用说明
+1. check 参数 主库环境预检查
+    1. 主要检查数据库版本是否大于11201
+    2. 主库归档模式 & force_logging 是否开启
+    3. 主库密码文件orapwd$SID是否存在
+    4. 主库是否使用spfile 
 
-2. 表
-   1. 表
-      1. 若
-   2. 注意事项
-      
+2. prepare 参数 主库环境检查,主备环境初始化，自动搭建oracle dataguard
+   1. 主库更新tnsnames.ora 
+   2. 下载主库tnsnames.ora，orapwd 密码文件
+   3. 本地备库tnsnames.ora orapwd 文件同步
+   4. 本地备库adump 等目录配置
+   5. 本地备库listener.ora 初始化
+   6. 本地备库pfile 初始化
+   7. 本地备库启动到 nomount 状态
+   8. 本地备库执行rman duplicate 命令    
 
     
 #### 使用事项
