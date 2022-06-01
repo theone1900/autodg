@@ -14,7 +14,7 @@ import (
 
 var (
 	conf    = flag.String("config", "config.toml", "specify the configuration file, default is config.toml")
-	mode    = flag.String("mode", "", "specify the program running mode: [prepare reverse full all]")
+	mode    = flag.String("mode", "", "specify the program running mode: [check prepare]")
 	version = flag.Bool("version", false, "view AutoDG version info")
 )
 
