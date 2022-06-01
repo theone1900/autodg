@@ -238,9 +238,9 @@ func Run(cfg *service.CfgFile, mode string) error {
 		//fmt.Println("[oracle spfile status] : ",spfile)
 		//log.Info("[oracle spfile status] : ",spfile)
 		if spfile < "1" {
-			log.Info(`Check oracle SPFILE status`, zap.String("Spfile", "there is no spfile ,pls create spfile from pfile"))
+			log.Info(`Check oracle SPFILE status`, zap.String("Spfile", "There is no spfile ,pls create spfile from pfile"))
 		} else {
-			log.Info(`Check oracle SPFILE status`, zap.String("Spfile", spfile))
+			log.Info(`Check oracle SPFILE status`, zap.String("Spfile", "There is a spfile"))
 		}
 
 	// 主库密码文件检查
