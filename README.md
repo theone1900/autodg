@@ -23,13 +23,6 @@
 ```
 支持oracle 11201 及以上版本,单机，RAC环境
 
-1、下载 oracle client，参考官网下载地址 https://www.oracle.com/database/technologies/instant-client/linux-x86-64-downloads.html
-
-2、上传 oracle client 至程序运行服务器，并解压到指定目录，比如：/data1/soft/client/instantclient_19_8
-
-3、配置程序运行环境变量 LD_LIBRARY_PATH
-export LD_LIBRARY_PATH=/data1/soft/client/instantclient_19_8
-echo $LD_LIBRARY_PATH
 
 4、配置 autodg 参数文件，config.toml 相关参数配置说明见 conf/config.toml
 
