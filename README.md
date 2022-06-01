@@ -47,13 +47,6 @@ alter database archivelog;
 ALTER DATABASE force log ;
 
 
-
-
-/* 查看附加日志 */
--- 数据库级别附加日志查看
-
-```
-
 若直接在命令行中用 `nohup` 启动程序，可能会因为 SIGHUP 信号而退出，建议把 `nohup` 放到脚本里面且不建议用 kill -9，如：
 
 ```shell
