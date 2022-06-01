@@ -19,9 +19,13 @@ func RunLocalCommand(cmd string) (string, error) {
 	// 此处是windows版本
 	//c := exec.Command("cmd", "/C", cmd)
 
-	output, err := c.CombinedOutput()
-	fmt.Println("[CMD output] : ", string(output))
-	return string(output), err
+	stdoutStderr, err := c.CombinedOutput()
+	//if err != nil {
+	//	log.Fatal(zap.String(err))
+	//}
+	fmt.Println("[CMD output] : ", string(stdoutStderr))
+	fmt.Printf("[CMD output] : %s\n", stdoutStderr)
+	return string(stdoutStderr), err
 }
 
 // CopylocalFile 操作系统本地文件拷贝
@@ -259,9 +263,9 @@ EOF`, target, auxiliary, parameter_value_convert, db_unique_name, log_archive_co
 
 	fmt.Println("[start standby Aux RMAN ]", cmds)
 
-	RunLocalCommand(cmds)
+	_, error := RunLocalCommand(cmds)
 
-	return string
+	return error
 }
 
 // MkdirStdOraAdump 创建备库实例adump 目录

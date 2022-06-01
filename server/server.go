@@ -191,10 +191,10 @@ func Run(cfg *service.CfgFile, mode string) error {
 
 		dv, err := strconv.Atoi((strings.Split(string(dbv), ".")[0]))
 		if dv < lowdbveriosn {
-			log.Warn(`oracle DBVersion`, zap.String("Dbversion", dbv), zap.String("extra", "dbversion <= 11201  is not support!"))
+			log.Warn(`Check oracle DBVersion`, zap.String("Dbversion", dbv), zap.String("extra", "dbversion <= 11201  is not support!"))
 			os.Exit(1)
 		} else {
-			log.Info(`oracle DBVersion`, zap.String("Dbversion", dbv))
+			log.Info(`Check oracle DBVersion`, zap.String("Dbversion", dbv))
 		}
 
 		// 读取主库oracle_sid
@@ -205,7 +205,7 @@ func Run(cfg *service.CfgFile, mode string) error {
 		//fmt.Println("[oracle sid] : ",sid)
 		//log.Info("[oracle sid] : ",sid)
 		//log.Debug(`This is a debug message.`, zap.String("lv", "debug"), zap.Int("no", 1))
-		log.Info(`oracle SID`, zap.String("SID", sid))
+		log.Info(`Get oracle SID`, zap.String("SID", sid))
 		//log.Warn(`This is a warning message.`, zap.String("lv", "warning"), zap.String("extra", "some extra msg"))
 
 		// 读取主库归档模式
@@ -216,9 +216,9 @@ func Run(cfg *service.CfgFile, mode string) error {
 		//fmt.Println("[oracle archived_mode] : ",archemode)
 		//log.Info("[oracle archived_mode] : ",archemode)
 		if archemode != "ARCHIVELOG" {
-			log.Warn(`oracle Archived_Mode`, zap.String("Archived_Mode", archemode), zap.String("extra", "oracle db is NO_ARCHIVELOG mode"))
+			log.Warn(`Get oracle Archived_Mode`, zap.String("Archived_Mode", archemode), zap.String("extra", "oracle db is NO_ARCHIVELOG mode,pls config DB ArchiveMode"))
 		} else {
-			log.Info(`oracle Archived_Mode`, zap.String("Archived_Mode", archemode))
+			log.Info(`Get oracle Archived_Mode`, zap.String("Archived_Mode", archemode))
 		}
 
 		//读取主库forceing logging 模式
@@ -228,7 +228,7 @@ func Run(cfg *service.CfgFile, mode string) error {
 		}
 		//fmt.Println("[oracle force_logging] : ",forcelog)
 		//log.Info("[oracle force_logging] : ",forcelog)
-		log.Info(`oracle Force_Logging`, zap.String("Force_Logging", forcelog))
+		log.Info(`Get oracle Force_Logging`, zap.String("Force_Logging", forcelog))
 
 		// 读取主库是否使用spfile
 		spfile, err := oracle.CheckOracleSpfile(engine)
@@ -237,7 +237,11 @@ func Run(cfg *service.CfgFile, mode string) error {
 		}
 		//fmt.Println("[oracle spfile status] : ",spfile)
 		//log.Info("[oracle spfile status] : ",spfile)
-		log.Info(`oracle SPFILE status`, zap.String("Spfile", spfile))
+		if spfile < "1" {
+			log.Info(`Check oracle SPFILE status`, zap.String("Spfile", "there is no spfile ,pls create spfile from pfile"))
+		} else {
+			log.Info(`Check oracle SPFILE status`, zap.String("Spfile", spfile))
+		}
 
 	// 主库密码文件检查
 	// todo: chakorapwd()   主库密码文件检查
