@@ -33,7 +33,14 @@ func CopylocalFile(sourceFile, destinationFile string) (int64, error) {
 	op, err1 := os.Open(sourceFile)
 	of, err2 := os.Create(destinationFile)
 	if err1 != nil || err2 != nil {
-		fmt.Println("文件拷贝失败")
+		fmt.Println("文件拷贝失败", err1, err2)
+		log.Warn("standby db 本地文件拷贝失败",
+			zap.String("待拷贝文件", sourceFile),
+			zap.String("拷贝目标地址", destinationFile),
+			//正常情况err1 为”nil“ 空
+			//zap.String("待拷贝文件",fmt.Sprintf(err1.Error())),
+			zap.String("拷贝目标地址", err2.Error()))
+		os.Exit(1)
 		//return err2
 	}
 	defer op.Close()
@@ -41,9 +48,10 @@ func CopylocalFile(sourceFile, destinationFile string) (int64, error) {
 
 	nBytes, err := io.Copy(of, op)
 	if err != nil {
-		fmt.Printf("The copy operation failed %q\n", err)
+		fmt.Printf("The copy operation failed : %q\n", err)
+		//os.Exit(1)
 	} else {
-		fmt.Printf("Copied %d bytes!\n", nBytes)
+		fmt.Printf("The copy operation Copied %d bytes! : \n", nBytes)
 	}
 	return nBytes, err
 }
@@ -55,9 +63,10 @@ func Copytns(scfg service.SourceConfig) (int64, error) {
 	//todo: need to change destns
 	//var destns = fmt.Sprintf(`%s/network/admin/tnsnames.ora/`,scfg.StandbyOracleHome)
 
-	var destns = fmt.Sprintf(`%s/tnsnames.ora1`, scfg.StandbyOracleHome)
-	fmt.Println("[Copytns() destns]:", scfg.StandbyOracleHome)
-	fmt.Println("[Copytns() destns]:", destns)
+	var destns = fmt.Sprintf(`%s/network/admin/tnsnames.ora`, scfg.StandbyOracleHome)
+	//fmt.Println("[Copytns() scfg.StandbyOracleHome]:", scfg.StandbyOracleHome)
+	//fmt.Println("[Copytns() destns]:", destns)
+	log.Info("copy tnsnames to $ORACLE_HOME/network/admin/", zap.String("destns", destns))
 
 	out, err := CopylocalFile(srctns, destns)
 	if err != nil {
@@ -75,12 +84,14 @@ func CopyOrapw(scfg service.SourceConfig, oracle_sid string) (int64, error) {
 	//var dest = fmt.Sprintf(`%s/dbs/orawd%s`,scfg.StandbyOracleHome,oracle_sid)
 	if scfg.IsRAC == "FALSE" {
 		var Dest = fmt.Sprintf(`%s/orawd%s`, scfg.StandbyOracleHome, oracle_sid)
-		fmt.Println("[CopyOrapw() dest]:", scfg.StandbyOracleHome)
-		fmt.Println("[CopyOrapw() dest]:", Dest)
+		//fmt.Println("[CopyOrapw() dest]:", scfg.StandbyOracleHome)
+		//fmt.Println("[CopyOrapw() dest]:", Dest)
+		log.Info("copy orapw to $ORACLE_HOME/dbs/", zap.String("destns", Dest))
 	} else {
 		var Dest = fmt.Sprintf(`%s/orawd%s1`, scfg.StandbyOracleHome, oracle_sid)
-		fmt.Println("[CopyOrapw() dest]:", scfg.StandbyOracleHome)
-		fmt.Println("[CopyOrapw() dest]:", Dest)
+		//fmt.Println("[CopyOrapw() dest]:", scfg.StandbyOracleHome)
+		//fmt.Println("[CopyOrapw() dest]:", Dest)
+		log.Info("copy orapw to $ORACLE_HOME/dbs/", zap.String("destns", Dest))
 	}
 	out, err := CopylocalFile(src, Dest)
 	if err != nil {
