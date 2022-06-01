@@ -70,19 +70,24 @@ func Copytns(scfg service.SourceConfig) (int64, error) {
 // CopyOrapw 拷贝orapw$SID 到备库$ORACLE_HOME/dbs 目录
 func CopyOrapw(scfg service.SourceConfig, oracle_sid string) (int64, error) {
 	var src = "orapw" + oracle_sid
-
+	var Dest string
 	//todo: need to change dest
 	//var dest = fmt.Sprintf(`%s/dbs/orawd%s`,scfg.StandbyOracleHome,oracle_sid)
-
-	var dest = fmt.Sprintf(`%s/orawd%s1`, scfg.StandbyOracleHome, oracle_sid)
-	fmt.Println("[CopyOrapw() dest]:", scfg.StandbyOracleHome)
-	fmt.Println("[CopyOrapw() dest]:", dest)
-
-	out, err := CopylocalFile(src, dest)
+	if scfg.IsRAC == "FALSE" {
+		var Dest = fmt.Sprintf(`%s/orawd%s`, scfg.StandbyOracleHome, oracle_sid)
+		fmt.Println("[CopyOrapw() dest]:", scfg.StandbyOracleHome)
+		fmt.Println("[CopyOrapw() dest]:", Dest)
+	} else {
+		var Dest = fmt.Sprintf(`%s/orawd%s1`, scfg.StandbyOracleHome, oracle_sid)
+		fmt.Println("[CopyOrapw() dest]:", scfg.StandbyOracleHome)
+		fmt.Println("[CopyOrapw() dest]:", Dest)
+	}
+	out, err := CopylocalFile(src, Dest)
 	if err != nil {
 		return out, err
 		os.Exit(1)
 	}
+
 	return out, err
 }
 
@@ -233,6 +238,7 @@ set db_unique_name= %s
 #set db_file_name_convert=
 #set log_file_name_convert=
 #set control_files=
+SET SGA_TARGET 4096M;
 set log_archive_max_processes='5'
 set fal_client='std1900'
 set fal_server='pri1900'
