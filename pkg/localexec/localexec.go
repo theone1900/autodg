@@ -33,13 +33,13 @@ func CopylocalFile(sourceFile, destinationFile string) (int64, error) {
 	op, err1 := os.Open(sourceFile)
 	of, err2 := os.Create(destinationFile)
 	if err1 != nil || err2 != nil {
-		fmt.Println("文件拷贝失败", err1, err2)
-		log.Warn("standby db 本地文件拷贝失败",
-			zap.String("待拷贝文件", sourceFile),
-			zap.String("拷贝目标地址", destinationFile),
+		//fmt.Println("文件拷贝失败", err1, err2)
+		log.Warn("Standby db local files copy failed",
+			zap.String("File need to copy", sourceFile),
+			zap.String("Copy file to ", destinationFile),
 			//正常情况err1 为”nil“ 空
 			//zap.String("待拷贝文件",fmt.Sprintf(err1.Error())),
-			zap.String("拷贝目标地址", err2.Error()))
+			zap.String("ERROR OF COPY", err2.Error()))
 		os.Exit(1)
 		//return err2
 	}
