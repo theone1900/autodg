@@ -29,6 +29,7 @@ func Run(cfg *service.CfgFile, mode string) error {
 		}
 
 		//  主库数据库版本检查 <= 11201 的版本不支持
+		log.Info("prepare DG", zap.String("Check Primary DB version start", ""))
 		service.Logger.Info("prepare DG", zap.String("Check Primary DB version ", ""))
 		dbversion, err := oracle.GetOracleDbversion(oraengine)
 		//fmt.Println("[dbversion] ：",dbversion)
@@ -40,27 +41,33 @@ func Run(cfg *service.CfgFile, mode string) error {
 		if dv < lowdbveriosn {
 			//fmt.Println("[important]: oracle dbversion is  <= 11201")
 			service.Logger.Warn("prepare DG", zap.String("oracle dbversion is  <= 11201", dbversion))
+			log.Warn("prepare DG", zap.String("oracle dbversion is  <= 11201", dbversion))
 			os.Exit(1)
+		} else {
+			log.Info("prepare DG", zap.String("Check Primary DB version ", dbversion))
 		}
 
 		// 读取主库oracle_sid
-		service.Logger.Info("prepare DG", zap.String("Get Primary DB  oracle_sid", ""))
+		service.Logger.Info("prepare DG", zap.String("Get Primary DB oracle_sid", ""))
 		sid, err := oracle.GetOracleDBSid(oraengine)
 		cfg.SourceConfig.OracleSid = sid
 		//fmt.Println("[oracle sid] : ",sid)
+		log.Info("prepare DG", zap.String("Get Primary DB  oracle_sid", sid))
 
 		// 读取主库db_name
-		service.Logger.Info("prepare DG", zap.String("Get Primary DB  db_name", ""))
+		service.Logger.Info("prepare DG", zap.String("Get Primary DB db_name", ""))
 		dbname, err := oracle.GetOracleDBname(oraengine)
 		cfg.SourceConfig.OracleDBname = dbname
 		//fmt.Println("[oracle db-name] : ",dbname)
-		service.Logger.Info("prepare DG", zap.String("Get Primary DB  db_name", dbname))
+		service.Logger.Info("prepare DG", zap.String("Get Primary DB db_name", dbname))
+		log.Info("prepare DG", zap.String("Get Primary DB db_name", dbname))
 
 		// 读取主库db_unique_name
 		service.Logger.Info("prepare DG", zap.String("Get Primary DB db_unique_name", ""))
 		db_unique_name, err := oracle.GetOracleUniquename(oraengine)
 		cfg.SourceConfig.OracleUniqname = db_unique_name
 		//fmt.Println("[oracle db_unique_name] : ",db_unique_name)
+		log.Info("prepare DG", zap.String("Get Primary DB db_unique_name", db_unique_name))
 
 		// 读取主库cluster_database 参数：
 		service.Logger.Info("prepare DG", zap.String("Get Primary DB (Sinage & RAC)", ""))
@@ -68,78 +75,102 @@ func Run(cfg *service.CfgFile, mode string) error {
 		cfg.SourceConfig.IsRAC = israc
 		if israc == "FALSE" {
 			service.Logger.Info("prepare DG", zap.String("Get Primary DB (Sinage & RAC)", "##This is a Single node DataBase"))
+			log.Info("prepare DG", zap.String("Get Primary DB (Sinage & RAC)", "This is a Single node DataBase"))
 			//fmt.Println("[oracle cluster_database] : ",israc," ##This is a Single node DataBase")
 		} else {
 			//fmt.Println("[oracle cluster_database] : ",israc," ##This is a RAC Cluster DataBase")
 			service.Logger.Info("prepare DG", zap.String("Get Primary DB (Sinage & RAC)", "##This is a RAC Cluster DataBase"))
+			log.Info("prepare DG", zap.String("Get Primary DB (Sinage & RAC)", "This is a RAC Cluster DataBase !"))
 
 		}
 
 		// 检查主库归档模式
 		service.Logger.Info("prepare DG", zap.String("Check Primary DB arch log mode", ""))
+		log.Info("prepare DG", zap.String("Check Primary DB arch log mode", ""))
 		arcmode, err := oracle.GetOracleArcMode(oraengine)
 		//fmt.Println("[arch log mode] : ",arcmode)
 		if arcmode != "ARCHIVELOG" {
 			//fmt.Println("[important]: oracle db is not run in ARCHIVELOG mode")
 			service.Logger.Warn("prepare DG", zap.String("oracle db is not running in ARCHIVELOG mode", arcmode))
+			log.Warn("prepare DG", zap.String("oracle db is not running in ARCHIVELOG mode", arcmode))
 			os.Exit(1)
+		} else {
+			service.Logger.Warn("prepare DG", zap.String("oracle db is  running in ARCHIVELOG mode", arcmode))
+			log.Info("prepare DG", zap.String("oracle db is running in ARCHIVELOG mode", arcmode))
 		}
 
 		// 检查主库force log状态
 		service.Logger.Info("prepare DG", zap.String("Check Primary DB FORCE_LOGGING mode ", ""))
+		log.Info("prepare DG", zap.String("Check Primary DB FORCE_LOGGING mode ", ""))
 		logmode, err := oracle.GetOracleForcelog(oraengine)
 		//fmt.Println("[Force log mode] ：",logmode)
 		if logmode != "YES" {
 			//fmt.Println("[important]: oracle db is not run in  FORCE_LOGGING mode")
 			service.Logger.Warn("prepare DG", zap.String("oracle db is not run in  FORCE_LOGGING mode", logmode))
+			log.Warn("prepare DG", zap.String("oracle db is not run in  FORCE_LOGGING mode", logmode))
 			os.Exit(1)
 			//todo:
 			//configForcelog(),是否自动配置force logging
+		} else {
+			service.Logger.Info("prepare DG", zap.String("oracle db is running in  FORCE_LOGGING mode", logmode))
+			log.Info("prepare DG", zap.String("oracle db is running in  FORCE_LOGGING mode", logmode))
 		}
 
 		// tnsnames.ora orapwd 初始化
 		// 检查主库密码文件是否存在
 		service.Logger.Info("prepare DG", zap.String("Check Primary DB orapw file", ""))
+		log.Info("prepare DG", zap.String("Check Primary DB orapw file", ""))
 		isorapwexist, err := sshexec.CheckPriOrapwd(cfg.SourceConfig, sid)
 		//fmt.Println("[isorapwexist]",isorapwexist)
 		a := strings.Index(isorapwexist, "1")
 		if a > 1 {
 			//fmt.Println("[important] ：there is no orapw"+sid )
 			service.Logger.Warn("prepare DG", zap.String("There is no orapw$sid", isorapwexist))
+			log.Warn("prepare DG", zap.String("There is no orapw$sid", isorapwexist))
 			os.Exit(1)
 
 			//todo
 			//是否创建oracle 密码文件：orapw()
+		} else {
+			service.Logger.Info("prepare DG", zap.String("There is orapw$sid", isorapwexist))
+			log.Info("prepare DG", zap.String("There is orapw$sid", isorapwexist))
 		}
 
 		// 下载主库orapw 文件
 		service.Logger.Info("prepare DG", zap.String("Download Primary DB orapw file ", cfg.SourceConfig.PrimaryOracleHome+"/dbs/orapw"+cfg.SourceConfig.OracleSid))
+		log.Info("prepare DG", zap.String("Download Primary DB orapw file ", cfg.SourceConfig.PrimaryOracleHome+"/dbs/orapw"+cfg.SourceConfig.OracleSid))
 		sshexec.DownloadPriOrapw(cfg.SourceConfig, sid)
 
 		// 更新主库tnsnames 文件
 		service.Logger.Info("prepare DG", zap.String("Update Primary DB tnsnames.ora file ", cfg.SourceConfig.PrimaryOracleHome+"/network/admin/tnsnames.ora"))
+		log.Info("prepare DG", zap.String("Update Primary DB tnsnames.ora file ", cfg.SourceConfig.PrimaryOracleHome+"/network/admin/tnsnames.ora"))
 		sshexec.UpdatePriTns(cfg.SourceConfig)
 
 		// 下载主库tnsnames.ora 文件
 		service.Logger.Info("prepare DG", zap.String("Download Primary DB tnsnames.ora file ", cfg.SourceConfig.PrimaryOracleHome+"/network/admin/tnsnames.ora"))
+		log.Info("prepare DG", zap.String("Download Primary DB tnsnames.ora file ", cfg.SourceConfig.PrimaryOracleHome+"/network/admin/tnsnames.ora"))
 		sshexec.DownloadPriTns(cfg.SourceConfig)
 
 		// 拷贝tnsnames，orapw 到备库
 		service.Logger.Info("prepare DG", zap.String("Init standby DB tnsnames.ora file ", cfg.SourceConfig.StandbyOracleHome+"/network/admin/tnsnames.ora"))
+		log.Info("prepare DG", zap.String("Init standby DB tnsnames.ora file ", cfg.SourceConfig.StandbyOracleHome+"/network/admin/tnsnames.ora"))
 		localexec.Copytns(cfg.SourceConfig)
 		service.Logger.Info("prepare DG", zap.String("Init standby DB orapw file ", cfg.SourceConfig.StandbyOracleHome+"/dbs/"+"orapw"+cfg.SourceConfig.OracleSid))
+		log.Info("prepare DG", zap.String("Init standby DB orapw file ", cfg.SourceConfig.StandbyOracleHome+"/dbs/"+"orapw"+cfg.SourceConfig.OracleSid))
 		localexec.CopyOrapw(cfg.SourceConfig, sid)
 
 		// 初始化备库listener（single:oracle  RAC:GRID）
 		// single: oracle user oracle_home
 		// RAC   : grid   user oracle_home
 		service.Logger.Info("prepare DG", zap.String("Init standby DB listener.ora file ", cfg.SourceConfig.StandbyGridHome+"/network/admin/tnsnames.ora"))
+		log.Info("prepare DG", zap.String("Init standby DB listener.ora file ", cfg.SourceConfig.StandbyGridHome+"/network/admin/tnsnames.ora"))
 		localexec.InitStdListener(cfg.SourceConfig)
 
 		// 启动备库监听 lnsrctl start listener
 		// single： oracle
 		// RAC   ： grid
 		service.Logger.Info("prepare DG", zap.String("Startup standby DB listener ", "Listener starting........."))
+		log.Info("prepare DG", zap.String("Startup standby DB listener ", "Listener starting........."))
 		localexec.StartListener(cfg.SourceConfig)
 
 		// 展现listener status
@@ -147,10 +178,14 @@ func Run(cfg *service.CfgFile, mode string) error {
 
 		// 初始化standby instance pfile
 		service.Logger.Info("prepare DG", zap.String("Init standby DB pfile ", "pfile initing........."))
+		log.Info("prepare DG", zap.String("Init standby DB pfile ", "pfile initing........."))
 		localexec.InitStdInstancePfile(cfg.SourceConfig)
+
+		//todo :show standby instance pfile contents
 
 		// 启动备库实例到nomount
 		service.Logger.Info("prepare DG", zap.String("Startup standby Instance(nomount) ", cfg.SourceConfig.StandbyOracleHome+"/dbs/pfile"+cfg.SourceConfig.OracleSid))
+		log.Info("prepare DG", zap.String("Startup standby Instance(nomount) ", cfg.SourceConfig.StandbyOracleHome+"/dbs/pfile"+cfg.SourceConfig.OracleSid))
 		localexec.StartStdInstance(cfg.SourceConfig)
 
 		// tnsping (主库，备库)连接校验
@@ -160,7 +195,10 @@ func Run(cfg *service.CfgFile, mode string) error {
 
 		// DG duplicate from active primary database
 		service.Logger.Info("prepare DG", zap.String("Startup RMAN Duplicate Database From Active database ", cfg.SourceConfig.OracleSid))
+		log.Info("prepare DG", zap.String("Startup RMAN Duplicate Database From Active database ", cfg.SourceConfig.OracleSid))
 		localexec.StartRmanDuplicate(cfg.SourceConfig)
+
+		//todo:realtime show rman log
 
 		if err != nil {
 			return err
@@ -174,6 +212,7 @@ func Run(cfg *service.CfgFile, mode string) error {
 		engine, err := NewOracleDBEngine(cfg.SourceConfig)
 		engine.Ping()
 		if err != nil {
+			log.Info("Start oracle primary db env check", zap.String("NewOracleDBEngine", err.Error()))
 			return err
 		}
 		//log.Info(`[oracle DB PING] :`, zap.String("lv", "info"), zap.String("Stat", ))
@@ -238,7 +277,7 @@ func Run(cfg *service.CfgFile, mode string) error {
 		//fmt.Println("[oracle spfile status] : ",spfile)
 		//log.Info("[oracle spfile status] : ",spfile)
 		if spfile < "1" {
-			log.Info(`Check oracle SPFILE status`, zap.String("Spfile", "There is no spfile ,pls create spfile from pfile"))
+			log.Warn(`Check oracle SPFILE status`, zap.String("Spfile", "There is no spfile ,pls create spfile from pfile"))
 		} else {
 			log.Info(`Check oracle SPFILE status`, zap.String("Spfile", "There is a spfile"))
 		}
