@@ -208,6 +208,7 @@ func Run(cfg *service.CfgFile, mode string) error {
 		//}
 
 	case "check":
+		log.Info("AutoDG--ORACLE DataGuard AutoConfig")
 		// 主库连通性检查，归档状态检查，forceinglog 检查，spfile 检查；
 		engine, err := NewOracleDBEngine(cfg.SourceConfig)
 		engine.Ping()
