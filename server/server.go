@@ -22,6 +22,8 @@ import (
 func Run(cfg *service.CfgFile, mode string) error {
 	switch strings.ToLower(strings.TrimSpace(mode)) {
 	case "prepare":
+		log.Info("AutoDG--ORACLE DataGuard AutoConfig . Copyright © 2022-2099 HuangLinJie")
+		service.Logger.Info("AutoDG--ORACLE DataGuard AutoConfig . Copyright © 2022-2099 HuangLinJie")
 		// dg 初始化 - only prepare 阶段
 		oraengine, err := NewOracleDBEngine(cfg.SourceConfig)
 		if err != nil {
