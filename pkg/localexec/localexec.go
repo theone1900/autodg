@@ -127,14 +127,14 @@ SID_LIST_LISTENER =
 		return string
 	} else {
 		cmds := fmt.Sprintf(`su - %s -c 'echo "
-LISTENER2 =
-(DESCRIPTION_LIST =
-(DESCRIPTION =
-(ADDRESS = (PROTOCOL = IPC)(KEY = ANYTHING))
-(ADDRESS = (PROTOCOL = TCP)(HOST = %s)(PORT = 1522))
-) )
+#LISTENER2 =
+#(DESCRIPTION_LIST =
+#(DESCRIPTION =
+#(ADDRESS = (PROTOCOL = IPC)(KEY = ANYTHING))
+#(ADDRESS = (PROTOCOL = TCP)(HOST = %s)(PORT = 1522))
+#) )
 
-SID_LIST_LISTENER2 =
+SID_LIST_LISTENER =
 (SID_LIST =
 (SID_DESC =
 	(GLOBAL_DBNAME = %s)
@@ -164,8 +164,8 @@ func StartListener(cfg service.SourceConfig) (res string, string error) {
 		}
 		return res, err
 	} else {
-		Cmds := fmt.Sprintf(`su - %s %s/bin/lsnrctl start listener2`, cfg.StandbyGridHomeOwner, cfg.StandbyGridHome)
-		fmt.Println("[Start local listener2]", Cmds)
+		Cmds := fmt.Sprintf(`su - %s %s/bin/lsnrctl start listener`, cfg.StandbyGridHomeOwner, cfg.StandbyGridHome)
+		fmt.Println("[Start local listener]", Cmds)
 
 		res, err := RunLocalCommand(Cmds)
 		if err != nil {
