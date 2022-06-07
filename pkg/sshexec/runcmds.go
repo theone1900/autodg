@@ -36,7 +36,7 @@ pri1900 =
 std1900 =
 		(DESCRIPTION =
 			(ADDRESS_LIST =
-			(ADDRESS = (PROTOCOL = TCP)(HOST = %s)(PORT = 1521))
+			(ADDRESS = (PROTOCOL = TCP)(HOST = %s)(PORT = 1522))
 		)
 		(CONNECT_DATA =
 			(SERVICE_NAME = %s)
