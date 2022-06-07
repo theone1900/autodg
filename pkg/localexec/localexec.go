@@ -76,6 +76,9 @@ func Copytns(scfg service.SourceConfig) (int64, error) {
 	return out, err
 }
 
+//5. 对于 active database duplication， 需要为 auxiliary instance 创建一个 password 文件，并建立 Oracle Net 连接，
+//这个临时创建的 password 文件会在稍后的 duplicate 操作时被覆盖。
+//orapwd file=orapwboston1 password=<primary database sys password>
 // CopyOrapw 拷贝orapw$SID 到备库$ORACLE_HOME/dbs 目录
 func CopyOrapw(scfg service.SourceConfig, oracle_sid string) (int64, error) {
 	var src = "orapw" + oracle_sid
@@ -178,13 +181,14 @@ func StartListener(cfg service.SourceConfig) (res string, string error) {
 	return
 }
 
+// 默认standby aux 实例sga 内存4G
 // InitStdInstancePfile Create the  initialization file for the ###_STANDBY_DB_INSTANCE_### instance:
 func InitStdInstancePfile(cfg service.SourceConfig) (string error) {
 	//todo: need to check db_unique_name&cluster_database
 	cmds := fmt.Sprintf(`cat <<EOF > %s/dbs/init%s.ora
 db_name=%s
-#db_unique_name=%suniq
-#cluster_database=false
+db_unique_name=%suniq
+sga_target=4g
 EOF `, cfg.StandbyOracleHome, cfg.OracleSid, cfg.OracleDBname, cfg.OracleSid+"uniq")
 
 	fmt.Println("[Init standby instance pfile] ： ", cmds)
