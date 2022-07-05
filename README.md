@@ -1,4 +1,5 @@
 # AutoDG oracle dataguard 自动搭建使用手册
+oracle dataguard 全自动搭建运维工具
 -------
 #### 功能参数使用说明
 1. check 参数 主库环境预检查
